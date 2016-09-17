@@ -13,13 +13,13 @@ namespace DotNetTee
 			try {
 				streams.Add (Console.OpenStandardOutput ());
 				foreach (string file in args) {
-					try{
-					streams.Add (File.Open (file, FileMode.Create, FileAccess.Write));
-					}catch(Exception ex){
+					try {
+						streams.Add (File.Open (file, FileMode.Create, FileAccess.Write));
+					} catch (Exception ex) {
 						// TODO access invocation so our prefix can be logical
 						// Also - maybe we should use a better error message, more specific to IO-type errors?
 						retCode = 1;
-						Console.Error.WriteLine("DotNetTee: {0}: {1}", file, ex.Message);
+						Console.Error.WriteLine ("DotNetTee: {0}: {1}", file, ex.Message);
 					}
 				}
 
