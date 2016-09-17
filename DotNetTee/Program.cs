@@ -6,20 +6,27 @@ namespace DotNetTee
 {
 	class MainClass
 	{
-		struct TeeOptions
+		public struct TeeOptions
 		{
 			public FileMode Mode;
 			public bool AcknowledgeInterrupts;
 
-			public TeeOptions(){
-				this.Mode = FileMode.Create;
-				this.AcknowledgeInterrupts = true;
+			public static TeeOptions Default {
+				get {
+					TeeOptions def = new TeeOptions ();
+					def.Mode = FileMode.Create;
+					def.AcknowledgeInterrupts = true;
+					return def;
+				}
 			}
 		}
 
 		public static TeeOptions ParseArgs (string[] args, out int fileIndexStart, ref int retCode)
 		{
-			TeeOptions opts = new TeeOptions ();
+			// This should always be overwritten later - default to assuming we have no files and all options
+			fileIndexStart = args.Length;
+
+			TeeOptions opts = TeeOptions.Default;
 			for (int i = 0; i < args.Length; i++) {
 				if (!args [i].StartsWith ("-")) {
 					// Not an option - done parsing
@@ -61,13 +68,15 @@ namespace DotNetTee
 					throw new Exception();
 				}
 			}
+
+			return opts;
 		}
 
 		public static int Main (string[] args)
 		{
 			int retCode = 0;
 			int fileIndexStart = 0;
-			TeeOptions opts;
+			TeeOptions opts = TeeOptions.Default;
 			try {
 				opts = ParseArgs (args, out fileIndexStart, ref retCode);
 			} catch {
