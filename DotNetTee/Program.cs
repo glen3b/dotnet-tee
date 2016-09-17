@@ -72,6 +72,19 @@ namespace DotNetTee
 			return opts;
 		}
 
+		public static void RedirectStreams(Stream input, params Stream[] outputs){
+			using (Stream stdin = input) {
+				byte[] buffer = new byte[2048];
+				int bytes;
+				while ((bytes = stdin.Read (buffer, 0, buffer.Length)) > 0) {
+					foreach (var stream in outputs) {
+						stream.Write (buffer, 0, bytes);
+						stream.Flush ();
+					}
+				}
+			}
+		}
+
 		public static int Main (string[] args)
 		{
 			int retCode = 0;
@@ -105,16 +118,7 @@ namespace DotNetTee
 					}
 				}
 
-				using (Stream stdin = Console.OpenStandardInput ()) {
-					byte[] buffer = new byte[2048];
-					int bytes;
-					while ((bytes = stdin.Read (buffer, 0, buffer.Length)) > 0) {
-						foreach (var stream in streams) {
-							stream.Write (buffer, 0, bytes);
-							stream.Flush ();
-						}
-					}
-				}
+				RedirectStreams(Console.OpenStandardInput(), streams.ToArray());
 			} finally {
 				foreach (var stream in streams) {
 					stream.Close ();
