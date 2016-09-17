@@ -6,15 +6,88 @@ namespace DotNetTee
 {
 	class MainClass
 	{
+		struct TeeOptions
+		{
+			public FileMode Mode;
+			public bool AcknowledgeInterrupts;
+
+			public TeeOptions(){
+				this.Mode = FileMode.Create;
+				this.AcknowledgeInterrupts = true;
+			}
+		}
+
+		public static TeeOptions ParseArgs (string[] args, out int fileIndexStart, ref int retCode)
+		{
+			TeeOptions opts = new TeeOptions ();
+			for (int i = 0; i < args.Length; i++) {
+				if (!args [i].StartsWith ("-")) {
+					// Not an option - done parsing
+					fileIndexStart = i;
+					break;
+				}
+
+				if (args [i].Equals ("--")) {
+					// POSIX? signification for end of options
+					// Next index is a file
+					fileIndexStart = i + 1;
+					break;
+				}
+
+				// We know it starts with a dash or two and it is in fact an option
+				switch (args [i].ToLowerInvariant ()) {
+				case "-a":
+				case "--append":
+					opts.Mode = FileMode.Append;
+					break;
+				case "-i":
+				case "-ignore-interrupts":
+					opts.AcknowledgeInterrupts = false;
+					break;
+				case "--help":
+					// TODO better help page implementation and display
+					Console.WriteLine ("DotNetTee [OPTION]... [FILE]...");
+					Console.WriteLine ("-a, --append: Append to the given files instead of overwriting them.");
+					Console.WriteLine ("-i, --ignore-interrupts: Ignore the ^C interrupt signal.");
+					Console.WriteLine ("--help: Display this help page.");
+
+					// This will cause termination in the enclosing trycatch
+					throw new Exception();
+				default:
+					retCode = 1;
+					Console.Error.WriteLine("Unrecognized option '{0}' - try passing '--help'", args[i]);
+
+					// This will cause termination in the enclosing trycatch
+					throw new Exception();
+				}
+			}
+		}
+
 		public static int Main (string[] args)
 		{
 			int retCode = 0;
+			int fileIndexStart = 0;
+			TeeOptions opts;
+			try {
+				opts = ParseArgs (args, out fileIndexStart, ref retCode);
+			} catch {
+				// Errored out
+				return retCode;
+			}
+
+			if (!opts.AcknowledgeInterrupts) {
+				// ^C does nothing to us
+				// Wait for EOF, ^D by default in bash
+				Console.CancelKeyPress += (object sender, ConsoleCancelEventArgs e) => e.Cancel = true;
+			}
+
 			List<Stream> streams = new List<Stream> ();
 			try {
 				streams.Add (Console.OpenStandardOutput ());
-				foreach (string file in args) {
+				for (int i = fileIndexStart; i < args.Length; i++) {
+					string file = args [i];
 					try {
-						streams.Add (File.Open (file, FileMode.Create, FileAccess.Write));
+						streams.Add (File.Open (file, opts.Mode, FileAccess.Write));
 					} catch (Exception ex) {
 						// TODO access invocation so our prefix can be logical
 						// Also - maybe we should use a better error message, more specific to IO-type errors?
