@@ -8,11 +8,19 @@ namespace DotNetTee
 	{
 		public static int Main (string[] args)
 		{
+			int retCode = 0;
 			List<Stream> streams = new List<Stream> ();
 			try {
 				streams.Add (Console.OpenStandardOutput ());
 				foreach (string file in args) {
+					try{
 					streams.Add (File.Open (file, FileMode.Create, FileAccess.Write));
+					}catch(Exception ex){
+						// TODO access invocation so our prefix can be logical
+						// Also - maybe we should use a better error message, more specific to IO-type errors?
+						retCode = 1;
+						Console.Error.WriteLine("DotNetTee: {0}: {1}", file, ex.Message);
+					}
 				}
 
 				using (Stream stdin = Console.OpenStandardInput ()) {
@@ -31,7 +39,7 @@ namespace DotNetTee
 				}
 			}
 
-			return 0;
+			return retCode;
 		}
 	}
 }
