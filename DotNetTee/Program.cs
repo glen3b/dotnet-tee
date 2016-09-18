@@ -28,7 +28,7 @@ namespace DotNetTee
 
 			TeeOptions opts = TeeOptions.Default;
 			for (int i = 0; i < args.Length; i++) {
-				if (!args [i].StartsWith ("-") && !(args [i].StartsWith ("/") && args [i].Length == 2)) {
+				if (!args [i].StartsWith ("-")) {
 					// Not an option - done parsing
 					fileIndexStart = i;
 					break;
@@ -61,7 +61,7 @@ namespace DotNetTee
 						// This will cause termination in the enclosing trycatch
 						throw new Exception ();
 					}
-				} else if (args [i] [0] == '-' && (args [i].Length < 2 || args [i] [1] != '-')) {
+				} else if (args [i][0] == '-' && (args[i].Length < 2 || args[i][1] != '-')) {
 					foreach (char c in args[i].Substring(1)) {
 						switch (c) {
 						case 'a':
@@ -77,25 +77,6 @@ namespace DotNetTee
 							// This will cause termination in the enclosing trycatch
 							throw new Exception ();
 						}
-					}
-				} else if (args [i] [0] == '/') {
-					switch (args [i]) {
-					case "/A":
-						opts.Mode = FileMode.Append;
-						break;
-					case "/I":
-						opts.AcknowledgeInterrupts = false;
-						break;
-					case "/?":
-						WriteHelp ();
-						// This will cause termination in the enclosing trycatch
-						throw new Exception ();
-					default:
-						retCode = 1;
-						WriteBadOption (args [i]);
-
-						// This will cause termination in the enclosing trycatch
-						throw new Exception ();
 					}
 				} else {
 					// What is this option?
@@ -114,9 +95,9 @@ namespace DotNetTee
 		{
 			// TODO better help page implementation and display
 			Console.WriteLine ("tee [OPTION]... [FILE]...");
-			Console.WriteLine ("-a, --append, /A: Append to the given files instead of overwriting them.");
-			Console.WriteLine ("-i, --ignore-interrupts, /I: Ignore the ^C interrupt signal.");
-			Console.WriteLine ("--help, /?: Display this help page.");
+			Console.WriteLine ("-a, --append: Append to the given files instead of overwriting them.");
+			Console.WriteLine ("-i, --ignore-interrupts: Ignore the ^C interrupt signal.");
+			Console.WriteLine ("--help: Display this help page.");
 		}
 
 		private static void WriteBadOption (string optName)
@@ -165,7 +146,7 @@ namespace DotNetTee
 						// TODO access invocation so our prefix can be logical
 						// Also - maybe we should use a better error message, more specific to IO-type errors?
 						retCode = 1;
-						Console.Error.WriteLine ("{2}: {0}: {1}", file, ex.Message, Environment.GetCommandLineArgs () [0]);
+						Console.Error.WriteLine ("{2}: {0}: {1}", file, ex.Message, Environment.GetCommandLineArgs()[0]);
 					}
 				}
 
