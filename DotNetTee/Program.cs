@@ -146,7 +146,16 @@ namespace DotNetTee
 						// TODO access invocation so our prefix can be logical
 						// Also - maybe we should use a better error message, more specific to IO-type errors?
 						retCode = 1;
-						Console.Error.WriteLine ("{2}: {0}: {1}", file, ex.Message, Environment.GetCommandLineArgs()[0]);
+
+						string errMsg = ex.Message;
+
+						// TODO better localization and error message POSIXification
+						// TODO less stupid switch-style statement
+						if(ex is UnauthorizedAccessException){
+							errMsg = "Permission denied";
+						}
+
+						Console.Error.WriteLine ("{2}: {0}: {1}", file, errMsg, Environment.GetCommandLineArgs()[0]);
 					}
 				}
 
