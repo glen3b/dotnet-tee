@@ -34,7 +34,7 @@ namespace DotNetTee
 					break;
 				}
 
-				if ("--".Equals(args[i])) {
+				if ("--".Equals (args [i])) {
 					// POSIX? signification for end of options
 					// Next index is a file
 					fileIndexStart = i + 1;
@@ -42,20 +42,44 @@ namespace DotNetTee
 				}
 
 				// We know it starts with a dash or two and it is in fact an option
-				switch (args [i].ToLowerInvariant ()) {
-				case "-a":
-				case "--append":
-					opts.Mode = FileMode.Append;
-					break;
-				case "-i":
-				case "-ignore-interrupts":
-					opts.AcknowledgeInterrupts = false;
-					break;
-				case "--help":
-					WriteHelp ();
-					// This will cause termination in the enclosing trycatch
-					throw new Exception ();
-				default:
+				if (args [i].StartsWith ("--")) {
+					switch (args [i].ToLowerInvariant ()) {
+					case "--append":
+						opts.Mode = FileMode.Append;
+						break;
+					case "-ignore-interrupts":
+						opts.AcknowledgeInterrupts = false;
+						break;
+					case "--help":
+						WriteHelp ();
+						// This will cause termination in the enclosing trycatch
+						throw new Exception ();
+					default:
+						retCode = 1;
+						WriteBadOption (args [i]);
+
+						// This will cause termination in the enclosing trycatch
+						throw new Exception ();
+					}
+				} else if (args [i][0] == '-' && (args[i].Length < 2 || args[i][1] != '-')) {
+					foreach (char c in args[i].Substring(1)) {
+						switch (c) {
+						case 'a':
+							opts.Mode = FileMode.Append;
+							break;
+						case 'i':
+							opts.AcknowledgeInterrupts = false;
+							break;
+						default:
+							retCode = 1;
+							WriteBadOption (args [i]);
+
+							// This will cause termination in the enclosing trycatch
+							throw new Exception ();
+						}
+					}
+				} else {
+					// What is this option?
 					retCode = 1;
 					WriteBadOption (args [i]);
 
@@ -67,15 +91,17 @@ namespace DotNetTee
 			return opts;
 		}
 
-		private static void WriteHelp(){
+		private static void WriteHelp ()
+		{
 			// TODO better help page implementation and display
-			Console.WriteLine ("DotNetTee [OPTION]... [FILE]...");
+			Console.WriteLine ("tee [OPTION]... [FILE]...");
 			Console.WriteLine ("-a, --append: Append to the given files instead of overwriting them.");
 			Console.WriteLine ("-i, --ignore-interrupts: Ignore the ^C interrupt signal.");
 			Console.WriteLine ("--help: Display this help page.");
 		}
 
-		private static void WriteBadOption(string optName){
+		private static void WriteBadOption (string optName)
+		{
 			Console.Error.WriteLine ("Unrecognized option '{0}' - try passing '--help'", optName);
 		}
 
@@ -120,11 +146,11 @@ namespace DotNetTee
 						// TODO access invocation so our prefix can be logical
 						// Also - maybe we should use a better error message, more specific to IO-type errors?
 						retCode = 1;
-						Console.Error.WriteLine ("DotNetTee: {0}: {1}", file, ex.Message);
+						Console.Error.WriteLine ("{2}: {0}: {1}", file, ex.Message, Environment.GetCommandLineArgs()[0]);
 					}
 				}
 
-				using(var stdin = Console.OpenStandardInput ()){
+				using (var stdin = Console.OpenStandardInput ()) {
 					RedirectStreams (stdin, streams.ToArray ());
 				}
 			} finally {
