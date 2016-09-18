@@ -34,7 +34,7 @@ namespace DotNetTee
 					break;
 				}
 
-				if (args [i].Equals ("--")) {
+				if ("--".Equals(args[i])) {
 					// POSIX? signification for end of options
 					// Next index is a file
 					fileIndexStart = i + 1;
@@ -52,17 +52,12 @@ namespace DotNetTee
 					opts.AcknowledgeInterrupts = false;
 					break;
 				case "--help":
-					// TODO better help page implementation and display
-					Console.WriteLine ("DotNetTee [OPTION]... [FILE]...");
-					Console.WriteLine ("-a, --append: Append to the given files instead of overwriting them.");
-					Console.WriteLine ("-i, --ignore-interrupts: Ignore the ^C interrupt signal.");
-					Console.WriteLine ("--help: Display this help page.");
-
+					WriteHelp ();
 					// This will cause termination in the enclosing trycatch
 					throw new Exception ();
 				default:
 					retCode = 1;
-					Console.Error.WriteLine ("Unrecognized option '{0}' - try passing '--help'", args [i]);
+					WriteBadOption (args [i]);
 
 					// This will cause termination in the enclosing trycatch
 					throw new Exception ();
@@ -70,6 +65,18 @@ namespace DotNetTee
 			}
 
 			return opts;
+		}
+
+		private static void WriteHelp(){
+			// TODO better help page implementation and display
+			Console.WriteLine ("DotNetTee [OPTION]... [FILE]...");
+			Console.WriteLine ("-a, --append: Append to the given files instead of overwriting them.");
+			Console.WriteLine ("-i, --ignore-interrupts: Ignore the ^C interrupt signal.");
+			Console.WriteLine ("--help: Display this help page.");
+		}
+
+		private static void WriteBadOption(string optName){
+			Console.Error.WriteLine ("Unrecognized option '{0}' - try passing '--help'", optName);
 		}
 
 		public static void RedirectStreams (Stream input, params Stream[] outputs)
