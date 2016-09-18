@@ -59,28 +59,27 @@ namespace DotNetTee
 					Console.WriteLine ("--help: Display this help page.");
 
 					// This will cause termination in the enclosing trycatch
-					throw new Exception();
+					throw new Exception ();
 				default:
 					retCode = 1;
-					Console.Error.WriteLine("Unrecognized option '{0}' - try passing '--help'", args[i]);
+					Console.Error.WriteLine ("Unrecognized option '{0}' - try passing '--help'", args [i]);
 
 					// This will cause termination in the enclosing trycatch
-					throw new Exception();
+					throw new Exception ();
 				}
 			}
 
 			return opts;
 		}
 
-		public static void RedirectStreams(Stream input, params Stream[] outputs){
-			using (Stream stdin = input) {
-				byte[] buffer = new byte[2048];
-				int bytes;
-				while ((bytes = stdin.Read (buffer, 0, buffer.Length)) > 0) {
-					foreach (var stream in outputs) {
-						stream.Write (buffer, 0, bytes);
-						stream.Flush ();
-					}
+		public static void RedirectStreams (Stream input, params Stream[] outputs)
+		{
+			byte[] buffer = new byte[2048];
+			int bytes;
+			while ((bytes = input.Read (buffer, 0, buffer.Length)) > 0) {
+				foreach (var stream in outputs) {
+					stream.Write (buffer, 0, bytes);
+					stream.Flush ();
 				}
 			}
 		}
@@ -118,7 +117,9 @@ namespace DotNetTee
 					}
 				}
 
-				RedirectStreams(Console.OpenStandardInput(), streams.ToArray());
+				using(var stdin = Console.OpenStandardInput ()){
+					RedirectStreams (stdin, streams.ToArray ());
+				}
 			} finally {
 				foreach (var stream in streams) {
 					stream.Close ();
