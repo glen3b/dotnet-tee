@@ -77,34 +77,9 @@ namespace DotNetTee
 				byte[] buffer = new byte[2048];
 				int bytes;
 				while ((bytes = stdin.Read (buffer, 0, buffer.Length)) > 0) {
-					// Basically we use this to break out if we encounter an end-of-file marker
-					// TODO is EOF encoding dependent?
-					bool returnOnEnd = false;
-
-					// Sometimes EOF (\u04) will get retransmitted here
-					// We have to handle that manually
-					// TODO also break on \03 or \00 ?
-					for (int i = 0; i < bytes; i++) {
-						if (buffer [i] == 0x04) {
-							// End of file
-							// TODO should we handle this? Improves consistency with GNU tee on bash
-
-							// Set to i: Bytes is a count, so to include the EOF we'd want i + 1, but we do not want the EOF, so it's (i + 1) - 1
-							bytes = i;
-							returnOnEnd = true;
-
-							// Break from inner loop
-							break;
-						}
-					}
-
 					foreach (var stream in outputs) {
 						stream.Write (buffer, 0, bytes);
 						stream.Flush ();
-					}
-
-					if (returnOnEnd) {
-						break;
 					}
 				}
 			}
